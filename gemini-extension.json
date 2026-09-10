@@ -1,0 +1,16 @@
+{
+  "name": "reachmcp",
+  "version": "1.0.0",
+  "description": "Reach MCP \u2014 operate a real LinkedIn account from Gemini CLI: inbox, invitations, Sales Navigator search in plain language, posts and engagement, with server-enforced daily quotas, idempotent writes and webhooks. Sign in with OAuth on first use.",
+  "mcpServers": {
+    "reach": {
+      "httpUrl": "https://app.reachmcp.com/mcp",
+      "oauth": {
+        "enabled": true
+      },
+      "timeout": 60000,
+      "trust": false
+    }
+  },
+  "contextFileName": "GEMINI.md"
+}

@@ -1,0 +1,8 @@
+# Continue Hub block (hub.continue.dev → Create block → MCP). Paste as is.
+name: Reach MCP
+version: 1.0.0
+schema: v1
+mcpServers:
+  - name: Reach MCP (LinkedIn)
+    type: streamable-http
+    url: https://app.reachmcp.com/mcp

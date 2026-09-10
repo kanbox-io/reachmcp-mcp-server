@@ -71,3 +71,15 @@ Built by the team behind Kanbox (2,000+ teams, 2 million LinkedIn messages sent)
 ---
 
 This repository holds the LobeHub Marketplace manifest (`lhm.plugin.json`) for the hosted Reach MCP server at `https://app.reachmcp.com/mcp`. The server itself is a hosted service; its documentation for agents is at https://www.reachmcp.com/llms.txt and the official MCP Registry entry is `com.reachmcp/linkedin`.
+
+## Install as a Gemini CLI extension
+
+```bash
+gemini extensions install https://github.com/kanbox-io/reachmcp-mcp-server
+```
+
+The extension registers the remote server with OAuth; a Reach sign-in page opens on first use. `GEMINI.md` carries the usage rules the model reads.
+
+## Continue
+
+`continue-block.yaml` is the MCP block for Continue (hub.continue.dev), pointing at the same endpoint.
