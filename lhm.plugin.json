@@ -1,0 +1,1738 @@
+{
+  "identifier": "reachmcp",
+  "name": "Reach MCP",
+  "version": "1.0.0",
+  "description": "Operate a real LinkedIn account from an AI agent: inbox, invitations, network, Sales Navigator search in plain language, posts and engagement. 52 tools, 6 playbooks served as prompts, daily quotas enforced server-side, structured errors, idempotent writes, signed webhooks. LinkedIn only. OAuth 2.1 or API key; 7-day trial.",
+  "author": "Kanbox",
+  "authorUrl": "https://www.reachmcp.com",
+  "homepage": "https://github.com/JeanCarriere/reachmcp-mcp-server",
+  "cloudEndpoint": "https://app.reachmcp.com/mcp",
+  "icon": "https://www.reachmcp.com/icon-512.png",
+  "category": "marketing",
+  "tags": [
+    "linkedin",
+    "sales",
+    "prospecting",
+    "outreach",
+    "recruiting",
+    "sales-navigator",
+    "webhooks",
+    "agents"
+  ],
+  "tools": [
+    {
+      "name": "reach_playbooks",
+      "description": "START HERE. Return the catalogue of ready-made LinkedIn playbooks — what this server can actually accomplish, as named workflows rather than raw endpoints. Each entry carries its tool sequence, its prerequisites, and the full instructions to run it. Call this first when the user asks what you can do with their LinkedIn account, or when a request is vague. Pass playbook_id to get one playbook's instructions and then follow them.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "playbook_id": {
+            "type": "string",
+            "description": "Id of one playbook from the catalogue, to get its full instructions."
+          },
+          "include_instructions": {
+            "type": "boolean",
+            "description": "Also return the full instruction text of every playbook (longer output)."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_accounts",
+      "description": "Return LinkedIn accounts accessible with the provided API key. If the key is restricted, only allowed account IDs are returned.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "delete_account",
+      "description": "Delete a LinkedIn account by account_id. Also clears invitation references before deletion.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_account_quotas",
+      "description": "Get the quotas configuration and usage counters for a LinkedIn account.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "update_account_quotas",
+      "description": "Update one or more quota configuration fields for a LinkedIn account. Only provided fields are updated.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "daily_invitations_conf": {
+            "type": "integer",
+            "description": "Daily limit for 'invitations' on this account; 0 means unlimited."
+          },
+          "daily_messages_conf": {
+            "type": "integer",
+            "description": "Daily limit for 'messages' on this account; 0 means unlimited."
+          },
+          "daily_visits_conf": {
+            "type": "integer",
+            "description": "Daily limit for 'visits' on this account; 0 means unlimited."
+          },
+          "daily_imports_standard_conf": {
+            "type": "integer",
+            "description": "Daily limit for 'imports_standard' on this account; 0 means unlimited."
+          },
+          "daily_imports_salesnav_conf": {
+            "type": "integer",
+            "description": "Daily limit for 'imports_salesnav' on this account; 0 means unlimited."
+          },
+          "daily_imports_recruiter_conf": {
+            "type": "integer",
+            "description": "Daily limit for 'imports_recruiter' on this account; 0 means unlimited."
+          },
+          "daily_posts_conf": {
+            "type": "integer",
+            "description": "Daily limit for 'posts' on this account; 0 means unlimited."
+          },
+          "daily_comments_conf": {
+            "type": "integer",
+            "description": "Daily limit for 'comments' on this account; 0 means unlimited."
+          },
+          "daily_reactions_conf": {
+            "type": "integer",
+            "description": "Daily limit for 'reactions' on this account; 0 means unlimited."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_account_request_logs",
+      "description": "Get request logs for a LinkedIn account with optional filtering by request_type and pagination using limit/offset.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "request_type": {
+            "type": "string",
+            "description": "Only rows of this request type (for example send_message, list_conversations, connect)."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of rows to return."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Number of rows to skip."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_account_request_logs_stats",
+      "description": "Get aggregated request-log statistics for a LinkedIn account, grouped by day, week, or month, with optional action and date-range filters.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "group_by": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week",
+              "month"
+            ],
+            "description": "Bucket size for the statistics: day, week or month."
+          },
+          "request_type": {
+            "type": "string",
+            "description": "Only rows of this request type (for example send_message, list_conversations, connect)."
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start of the period, ISO 8601 (default: 30 days ago)."
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "End of the period, ISO 8601 (default: now)."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_me",
+      "description": "Call LinkedIn Voyager /me for an account through the stored proxy/cookies and return the normalized profile (same fields as Kanbox uses from /me).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_connections",
+      "description": "List LinkedIn 1st-degree connections for an account (Voyager dash connections), paged with start/count — same payload as GET /api/linkedin/{account_id}/connections.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "start": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Pagination offset, 0-based."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Page size."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_conversations",
+      "description": "List LinkedIn messenger conversations (Voyager Messaging GraphQL), with optional archived, unread, starred filters and next_cursor paging — same as GET /api/linkedin/{account_id}/conversations. Each item returns conversation_id (the thread id — use this as conversation_linkedin_id when fetching messages or replying) and recipient_linkedin_id (the peer's fsd_profile id — use this as recipient_linkedin_id when sending a new message).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Only archived conversations."
+          },
+          "unread": {
+            "type": "boolean",
+            "description": "Only conversations with unread messages."
+          },
+          "starred": {
+            "type": "boolean",
+            "description": "Only starred conversations."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25,
+            "description": "Page size."
+          },
+          "next_cursor": {
+            "type": "string",
+            "description": "Cursor returned by the previous page; omit for the first page."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_conversation_messages",
+      "description": "List messages in a LinkedIn conversation via Voyager ``/messaging/conversations/{id}/events`` (Kanbox ``get_conversation_messages``), with optional created_before paging — same as GET /api/linkedin/{account_id}/conversations/{conversation_linkedin_id}/messages.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "conversation_linkedin_id": {
+            "type": "string",
+            "description": "Conversation (thread) id, as returned by list_conversations."
+          },
+          "created_before": {
+            "type": "string",
+            "description": "Only messages created before this Unix timestamp in milliseconds, to page back in time."
+          }
+        },
+        "required": [
+          "account_id",
+          "conversation_linkedin_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_scheduled_posts",
+      "description": "List scheduled LinkedIn posts for an account, paged. Returns post URNs, text content, and scheduled publish times.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "start": {
+            "type": "integer",
+            "default": 0,
+            "description": "Pagination offset, 0-based."
+          },
+          "count": {
+            "type": "integer",
+            "default": 10,
+            "description": "Page size."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "update_scheduled_post",
+      "description": "Update the text and/or scheduled time of an existing scheduled LinkedIn post. post_urn is the URN returned by list_scheduled_posts (e.g. urn:li:ugcPost:…). At least one of text or scheduled_at must be provided.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "post_urn": {
+            "type": "string",
+            "description": "URN of the scheduled post (urn:li:…), from list_scheduled_posts."
+          },
+          "text": {
+            "type": "string",
+            "description": "Plain text to send or post."
+          },
+          "scheduled_at": {
+            "type": "integer",
+            "description": "Unix timestamp in milliseconds."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "post_urn"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "delete_scheduled_post",
+      "description": "Delete a scheduled LinkedIn post. post_urn is the URN returned by list_scheduled_posts (e.g. urn:li:ugcPost:…).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "post_urn": {
+            "type": "string",
+            "description": "URN of the scheduled post (urn:li:…), from list_scheduled_posts."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "post_urn"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "upload_media_from_url",
+      "description": "Upload an image to LinkedIn by fetching it from a public URL. Returns a digitalmediaAsset URN (urn:li:digitalmediaAsset:…) that can be passed to create_post (single image) or create_multi_photo (multi-photo). Use this instead of upload-media when working as an agent — no binary file upload needed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "image_url": {
+            "type": "string",
+            "description": "Publicly accessible URL of the image to upload."
+          },
+          "media_upload_type": {
+            "type": "string",
+            "default": "IMAGE_SHARING",
+            "description": "LinkedIn media upload type (default: IMAGE_SHARING)."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "image_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_multi_photo",
+      "description": "Create a LinkedIn multi-photo object from a list of digitalmediaAsset URNs. Returns an identifierUrn (urn:li:fsd_multiPhoto:…) to pass to create_post. author_urn is the urn:li:fsd_profile:… of the connected account (get it from get_me).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "author_urn": {
+            "type": "string",
+            "description": "Only messages from this author URN."
+          },
+          "media_urns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of urn:li:digitalmediaAsset:… URNs."
+          },
+          "alt_texts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional alt text per image (same order as media_urns)."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "author_urn",
+          "media_urns"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_post",
+      "description": "Create or schedule a LinkedIn post, optionally with a media attachment. For a single image pass a urn:li:digitalmediaAsset:… URN; for multiple images pass a urn:li:fsd_multiPhoto:… URN from create_multi_photo. Set scheduled_at (Unix ms) to schedule; omit it to publish immediately.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "text": {
+            "type": "string",
+            "description": "Plain text to send or post."
+          },
+          "media_urn": {
+            "type": "string",
+            "description": "Optional media URN to attach."
+          },
+          "scheduled_at": {
+            "type": "integer",
+            "description": "Scheduled publish time in Unix milliseconds. Omit to publish now."
+          },
+          "visibility": {
+            "type": "string",
+            "default": "ANYONE",
+            "description": "'ANYONE' or 'CONNECTIONS_ONLY'."
+          },
+          "allowed_commenters_scope": {
+            "type": "string",
+            "default": "ALL",
+            "description": "'ALL' or 'CONNECTIONS_ONLY'."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "send_message",
+      "description": "Send a LinkedIn DM via Voyager createMessage: use conversation_linkedin_id for an existing thread or recipient_linkedin_id for a new DM.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "text": {
+            "type": "string",
+            "description": "Plain text to send or post."
+          },
+          "conversation_linkedin_id": {
+            "type": "string",
+            "description": "Conversation (thread) id, as returned by list_conversations."
+          },
+          "recipient_linkedin_id": {
+            "type": "string",
+            "description": "Recipient profile id (fsd_profile id) to start a new conversation; from list_conversations or scrape_profile. Omit when replying in an existing conversation."
+          },
+          "in_mail_premium": {
+            "type": "boolean",
+            "description": "Send as InMail to someone outside the network (premium accounts); requires recipient_linkedin_id."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "scrape_profile",
+      "description": "Fetch a complete LinkedIn profile (name, headline, company, experience, skills…). Pass a LinkedIn URL, vanity name, internal member ID, or Sales Navigator lead URL. Uses SalesNav API when available for richer data.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "linkedin_id_or_url": {
+            "type": "string",
+            "description": "LinkedIn profile URL, vanity name, Sales Navigator URL, or internal member ID."
+          }
+        },
+        "required": [
+          "account_id",
+          "linkedin_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "scrape_search",
+      "description": "Run one page of a LinkedIn, Sales Navigator, or Recruiter search and return normalized profile rows. Pass the full search URL. Use start+count to paginate (count ignored for standard LinkedIn, fixed ~10/page).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "url": {
+            "type": "string",
+            "description": "Full LinkedIn / SalesNav / Recruiter search URL."
+          },
+          "start": {
+            "type": "integer",
+            "default": 0,
+            "description": "Pagination offset."
+          },
+          "count": {
+            "type": "integer",
+            "default": 25,
+            "description": "Page size (max 25). Ignored for standard LinkedIn."
+          }
+        },
+        "required": [
+          "account_id",
+          "url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "visit_profile",
+      "description": "Simulate a profile view, triggering a 'viewed your profile' notification for the target member.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "linkedin_id_or_url": {
+            "type": "string",
+            "description": "LinkedIn member ID, vanity name, or profile URL."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "linkedin_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "profile_viewers",
+      "description": "Get the list of members who recently viewed the account's profile (requires LinkedIn Premium).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "user_posts",
+      "description": "Get recent posts published by a LinkedIn member (via profileUpdatesV2). Paginate with start/count.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "linkedin_id_or_url": {
+            "type": "string",
+            "description": "LinkedIn member ID, vanity name, or profile URL."
+          },
+          "count": {
+            "type": "integer",
+            "default": 10,
+            "description": "Number of posts (max 50)."
+          },
+          "start": {
+            "type": "integer",
+            "default": 0,
+            "description": "Pagination offset."
+          }
+        },
+        "required": [
+          "account_id",
+          "linkedin_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "scrape_post",
+      "description": "Fetch likers and/or commenters for a LinkedIn post. Pass the full post URL or slug. Set liked=true and/or comments=true.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "post_id_or_url": {
+            "type": "string",
+            "description": "LinkedIn post URL or slug."
+          },
+          "liked": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include likers."
+          },
+          "comments": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include commenters."
+          }
+        },
+        "required": [
+          "account_id",
+          "post_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "scrape_my_posts",
+      "description": "Fetch likers and/or commenters for the account's own recent posts. since_hours limits to posts published in the last N hours (default 24).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "liked": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include the people who liked."
+          },
+          "comments": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include the people who commented, with their comment text."
+          },
+          "since_hours": {
+            "type": "integer",
+            "default": 24,
+            "description": "Only posts from the last N hours (max 720)."
+          },
+          "max_posts": {
+            "type": "integer",
+            "default": 10,
+            "description": "Max posts to process (max 20)."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "like_post",
+      "description": "Like a LinkedIn post on behalf of the connected account. Pass the post URL, slug, or URN.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "post_url_or_urn": {
+            "type": "string",
+            "description": "LinkedIn post URL, slug, or urn:li:activity:…."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "post_url_or_urn"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "comment_post",
+      "description": "Post a comment on a LinkedIn post on behalf of the connected account.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "post_url_or_urn": {
+            "type": "string",
+            "description": "LinkedIn post URL, slug, or URN."
+          },
+          "text": {
+            "type": "string",
+            "description": "Comment text."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "post_url_or_urn",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "reply_comment",
+      "description": "Post a reply to an existing LinkedIn comment. Pass the comment_id (URN) returned by scrape_post as comment_urn — it is used directly as threadUrn.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "comment_urn": {
+            "type": "string",
+            "description": "URN of the comment to reply to (comment_id from scrape-post)."
+          },
+          "text": {
+            "type": "string",
+            "description": "Reply text."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "comment_urn",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "star_conversation",
+      "description": "Star or unstar a LinkedIn conversation. Set star=false to remove the star. conversation_linkedin_id is the conversation_id returned by list_conversations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "conversation_linkedin_id": {
+            "type": "string",
+            "description": "Conversation (thread) id, as returned by list_conversations."
+          },
+          "star": {
+            "type": "boolean",
+            "default": true,
+            "description": "True to star, False to unstar."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "conversation_linkedin_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "archive_conversation",
+      "description": "Archive or unarchive a LinkedIn conversation. Set archive=false to unarchive. conversation_linkedin_id is the conversation_id returned by list_conversations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "conversation_linkedin_id": {
+            "type": "string",
+            "description": "Conversation (thread) id, as returned by list_conversations."
+          },
+          "archive": {
+            "type": "boolean",
+            "default": true,
+            "description": "True to archive, False to unarchive."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "conversation_linkedin_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "delete_conversation",
+      "description": "Permanently delete a LinkedIn conversation. conversation_linkedin_id is the conversation_id returned by list_conversations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "conversation_linkedin_id": {
+            "type": "string",
+            "description": "Conversation (thread) id, as returned by list_conversations."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "conversation_linkedin_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "react_message",
+      "description": "Add or remove an emoji reaction on a LinkedIn message. Set react=false to remove the reaction. message_urn is the message_urn returned by list_conversation_messages (e.g. urn:li:msg_message:(urn:li:fsd_profile:…,123456789)). emoji is a Unicode emoji character (e.g. 👍, ❤️). Pass conversation_linkedin_id to also mark the conversation as read.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "message_urn": {
+            "type": "string",
+            "description": "Full message URN to react to."
+          },
+          "emoji": {
+            "type": "string",
+            "description": "Unicode emoji character (e.g. 👍, ❤️)."
+          },
+          "react": {
+            "type": "boolean",
+            "default": true,
+            "description": "True to add the reaction, False to remove it."
+          },
+          "conversation_linkedin_id": {
+            "type": "string",
+            "description": "Conversation ID — when provided the conversation is marked as read."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "message_urn",
+          "emoji"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "connect",
+      "description": "Send a connection request to a LinkedIn member. Optional message capped at 300 chars (premium) or 200 chars.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "linkedin_id_or_url": {
+            "type": "string",
+            "description": "LinkedIn member ID, vanity name, or profile URL."
+          },
+          "message": {
+            "type": "string",
+            "description": "Optional personalised invitation note."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "linkedin_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "invitation_status",
+      "description": "Get the connection and invitation status between the connected account and a LinkedIn member. Returns is_connection, invitation_type (SENT/PENDING/WITHDRAWN/REFUSED).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "linkedin_id_or_url": {
+            "type": "string",
+            "description": "The LinkedIn member: profile URL, vanity name (the part after /in/), Sales Navigator URL, or internal member id."
+          }
+        },
+        "required": [
+          "account_id",
+          "linkedin_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "withdraw_invitation",
+      "description": "Withdraw a pending sent connection request.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "linkedin_id_or_url": {
+            "type": "string",
+            "description": "The LinkedIn member: profile URL, vanity name (the part after /in/), Sales Navigator URL, or internal member id."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "linkedin_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "accept_invitation",
+      "description": "Accept a pending received connection request.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "linkedin_id_or_url": {
+            "type": "string",
+            "description": "The LinkedIn member: profile URL, vanity name (the part after /in/), Sales Navigator URL, or internal member id."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "linkedin_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "decline_invitation",
+      "description": "Decline/ignore a pending received connection request.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "linkedin_id_or_url": {
+            "type": "string",
+            "description": "The LinkedIn member: profile URL, vanity name (the part after /in/), Sales Navigator URL, or internal member id."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "linkedin_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "remove_connection",
+      "description": "Remove an existing 1st-degree connection.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "linkedin_id_or_url": {
+            "type": "string",
+            "description": "The LinkedIn member: profile URL, vanity name (the part after /in/), Sales Navigator URL, or internal member id."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "linkedin_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "follow",
+      "description": "Follow or unfollow a LinkedIn member without connecting. Set follow=false to unfollow.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "linkedin_id_or_url": {
+            "type": "string",
+            "description": "The LinkedIn member: profile URL, vanity name (the part after /in/), Sales Navigator URL, or internal member id."
+          },
+          "follow": {
+            "type": "boolean",
+            "default": true,
+            "description": "True to follow, False to unfollow."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "linkedin_id_or_url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_received_invitations",
+      "description": "List pending connection invitations received by the account (with invitation_secret to accept them).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "start": {
+            "type": "integer",
+            "default": 0,
+            "description": "Pagination offset, 0-based."
+          },
+          "count": {
+            "type": "integer",
+            "default": 20,
+            "description": "Page size (max 100)."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_sent_invitations",
+      "description": "List pending connection invitations sent by the account that have not yet been accepted.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "start": {
+            "type": "integer",
+            "default": 0,
+            "description": "Pagination offset, 0-based."
+          },
+          "count": {
+            "type": "integer",
+            "default": 20,
+            "description": "Page size (max 100)."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "salesnav_list_thread_messages",
+      "description": "Fetch a Sales Navigator thread with all its messages and participant profiles (salesApiMessagingThreads/{id}). Requires a Sales Navigator subscription. Use the thread id returned by salesnav_list_messaging_threads. message_count controls how many (most recent) messages are returned; compare with total_message_count in the response to know if more exist.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "thread_id": {
+            "type": "string",
+            "description": "Sales Navigator thread ID."
+          },
+          "message_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20,
+            "description": "Number of most-recent messages to return."
+          }
+        },
+        "required": [
+          "account_id",
+          "thread_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "salesnav_send_message",
+      "description": "Send a message in an existing Sales Navigator thread (salesApiMessageActions). Requires the account to have a Sales Navigator subscription. Use the thread id returned by salesnav_list_messaging_threads.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "thread_id": {
+            "type": "string",
+            "description": "Sales Navigator thread ID."
+          },
+          "text": {
+            "type": "string",
+            "description": "Message body (plain text)."
+          },
+          "copy_to_crm": {
+            "type": "boolean",
+            "default": false,
+            "description": "Copy message to CRM."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "thread_id",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "salesnav_list_messaging_threads",
+      "description": "List Sales Navigator messaging threads (salesApiMessagingThreads). Requires the account to have a Sales Navigator subscription (has_sales_nav). Returns threads with messages and participant profiles. Paginate by passing next_page_starts_at from the previous response as page_starts_at.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "filter": {
+            "type": "string",
+            "enum": [
+              "INBOX",
+              "ARCHIVE",
+              "UNREAD",
+              "INMAIL_PENDING",
+              "INMAIL_ACCEPTED",
+              "INMAIL_DECLINED"
+            ],
+            "default": "INBOX",
+            "description": "Conversation folder."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 20,
+            "description": "Threads per page."
+          },
+          "page_starts_at": {
+            "type": "integer",
+            "description": "Pagination cursor — next_page_starts_at from the previous response."
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "salesnav_resolve_industry",
+      "description": "Resolve an industry name (any language) to its LinkedIn Industry Code(s) using the bundled Industry Codes V2 taxonomy (offline, no LinkedIn call). Returns ranked candidates with id, label and hierarchy path. Use the returned id(s) in salesnav_build_search_url's `industry` filter. Call once per industry term; if several candidates look plausible, pick by the hierarchy path.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Industry name to look up, e.g. 'software', 'banque', 'real estate'."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25,
+            "default": 8,
+            "description": "Maximum number of rows to return."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "salesnav_typeahead",
+      "description": "Live Sales Navigator autocomplete for facets whose ids are dynamic. Use type='geo' to resolve a location to its REGION id (the only reliable way — LinkedIn region ids are not enumerable), and type='company' / 'school' / 'title' for those entity facets. Returns [{id, displayValue, headline}]. Feed the chosen id into salesnav_build_search_url (region / current_company / school / current_title). Requires a connected account.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "geo",
+              "company",
+              "school",
+              "title",
+              "group",
+              "industry"
+            ],
+            "default": "geo",
+            "description": "Facet to autocomplete. 'geo' -> region ids."
+          },
+          "query": {
+            "type": "string",
+            "description": "Text to autocomplete, e.g. 'Paris', 'Google', 'HEC'."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25,
+            "default": 10,
+            "description": "Page size."
+          }
+        },
+        "required": [
+          "account_id",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "salesnav_build_search_url",
+      "description": "Build a Sales Navigator people-search URL from structured lead-search filters, using as many filters as the request implies. RESOLUTION: `industry` accepts numeric ids OR names (auto-resolved via the taxonomy); `region` accepts numeric REGION ids OR location names (auto-resolved via geo typeahead — needs account_id). If a name is ambiguous, the tool returns {needs_disambiguation:[...]} with candidates instead of a URL — re-call with the chosen id. BOOLEAN: `keywords` and `current_title` accept LinkedIn boolean syntax (AND/OR/NOT, quotes, parentheses). EXCLUSION: any list value may be an object {id|name, exclude:true}. Set execute=true to also run the first page of results (reuses the live search) and return leads.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Required when passing location/industry NAMES or execute=true."
+          },
+          "keywords": {
+            "type": "string",
+            "description": "Global keyword search; supports boolean operators."
+          },
+          "current_title": {
+            "type": "string",
+            "description": "Current job title; free text + boolean (e.g. '(CTO OR \"VP Engineering\") NOT interim')."
+          },
+          "past_title": {
+            "type": "string",
+            "description": "Boolean search on past job titles."
+          },
+          "first_name": {
+            "type": "string",
+            "description": "First name filter."
+          },
+          "last_name": {
+            "type": "string",
+            "description": "Last name filter."
+          },
+          "company_headcount": {
+            "type": "array",
+            "items": {},
+            "description": "COMPANY_HEADCOUNT codes: A=Self-employed B=1-10 C=11-50 D=51-200 E=201-500 F=501-1000 G=1001-5000 H=5001-10000 I=10001+."
+          },
+          "company_type": {
+            "type": "array",
+            "items": {},
+            "description": "COMPANY_TYPE: C=Public P=Privately Held N=Non Profit D=Educational S=Partnership E=Self-Employed O=Self Owned G=Government."
+          },
+          "function": {
+            "type": "array",
+            "items": {},
+            "description": "FUNCTION 1-26: 1 Accounting 4 Business Dev 8 Engineering 10 Finance 12 HR 13 IT 15 Marketing 18 Operations 19 Product 25 Sales 26 Support (etc.)."
+          },
+          "seniority_level": {
+            "type": "array",
+            "items": {},
+            "description": "SENIORITY: 320 Owner/Partner 310 CXO 300 VP 220 Director 210 Exp. Manager 200 Entry Manager 130 Strategic 120 Senior 110 Entry 100 Trainee."
+          },
+          "years_at_current_company": {
+            "type": "array",
+            "items": {},
+            "description": "1=<1y 2=1-2y 3=3-5y 4=6-10y 5=>10y."
+          },
+          "years_in_current_position": {
+            "type": "array",
+            "items": {},
+            "description": "1=<1y 2=1-2y 3=3-5y 4=6-10y 5=>10y."
+          },
+          "years_of_experience": {
+            "type": "array",
+            "items": {},
+            "description": "1=<1y 2=1-2y 3=3-5y 4=6-10y 5=>10y."
+          },
+          "relationship": {
+            "type": "array",
+            "items": {},
+            "description": "RELATIONSHIP: F=1st S=2nd A=Group members O=3rd+."
+          },
+          "profile_language": {
+            "type": "array",
+            "items": {},
+            "description": "ISO 639-1 codes: en fr es de it pt nl ... "
+          },
+          "industry": {
+            "type": "array",
+            "items": {},
+            "description": "Industry ids (use salesnav_resolve_industry) or names to auto-resolve. Items may be {id|name, exclude}."
+          },
+          "region": {
+            "type": "array",
+            "items": {},
+            "description": "REGION ids (use salesnav_typeahead type=geo) or location names to auto-resolve. Items may be {id|name, exclude}."
+          },
+          "current_company": {
+            "type": "array",
+            "items": {},
+            "description": "Resolved COMPANY ids (salesnav_typeahead type=company)."
+          },
+          "past_company": {
+            "type": "array",
+            "items": {},
+            "description": "Past companies: names or ids; add exclude:true to exclude one."
+          },
+          "school": {
+            "type": "array",
+            "items": {},
+            "description": "Resolved SCHOOL ids."
+          },
+          "group": {
+            "type": "array",
+            "items": {},
+            "description": "LinkedIn groups: names or ids."
+          },
+          "follows_your_company": {
+            "type": "boolean",
+            "description": "Only people who follow your company page."
+          },
+          "viewed_your_profile": {
+            "type": "boolean",
+            "description": "Only people who viewed your profile recently."
+          },
+          "past_colleague": {
+            "type": "boolean",
+            "description": "Only past colleagues."
+          },
+          "with_shared_experiences": {
+            "type": "boolean",
+            "description": "Only people with shared experiences (school, company, group)."
+          },
+          "recently_changed_jobs": {
+            "type": "boolean",
+            "description": "Only people who changed jobs in the last 90 days."
+          },
+          "posted_on_linkedin": {
+            "type": "boolean",
+            "description": "Only people who posted on LinkedIn in the last 30 days."
+          },
+          "execute": {
+            "type": "boolean",
+            "default": false,
+            "description": "Also run the first results page and return leads."
+          },
+          "start": {
+            "type": "integer",
+            "default": 0,
+            "description": "Pagination offset, 0-based."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25,
+            "default": 25,
+            "description": "Page size."
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_webhook_endpoints",
+      "description": "List the webhooks registered for this user: the URLs Reach calls when a conversation gets a new message (message.received), the account gains a 1st-degree connection (connection.new), an account changes connection state (account.status_changed) or a daily quota is close to or at its limit (quota.threshold_reached, quota.reached). Read-only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_webhook_endpoint",
+      "description": "Register a URL to be called when something happens on LinkedIn, so an agent or an n8n/Make workflow can react instead of polling. Returns the signing secret ONCE; deliveries carry 'Reach-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, t + '.' + body)>'. Events: message.received, connection.new, account.status_changed, quota.threshold_reached, quota.reached, or '*' for all. Omit account_ids to subscribe for every account of the user. https only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "https URL that accepts a JSON POST."
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Event types, or ['*']."
+          },
+          "account_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Optional: only these LinkedIn account ids."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Free-text label for your own reference."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "url",
+          "events"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "update_webhook_endpoint",
+      "description": "Change a webhook's url, events, account_ids, description or is_active. Only provided fields change. Re-enabling clears the failure counter.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "endpoint_id": {
+            "type": "integer",
+            "description": "Webhook endpoint id, from list_webhook_endpoints."
+          },
+          "url": {
+            "type": "string",
+            "description": "https URL that receives the signed JSON POST (http accepted for localhost only)."
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Event types to subscribe to (message.received, connection.new, account.status_changed, quota.threshold_reached, quota.reached) or ['*']."
+          },
+          "account_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Only these LinkedIn account ids; omit for every account of the user."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Free-text label for your own reference."
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Pause (false) or resume (true) deliveries."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "endpoint_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "delete_webhook_endpoint",
+      "description": "Delete a webhook endpoint and its delivery history.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "endpoint_id": {
+            "type": "integer",
+            "description": "Webhook endpoint id, from list_webhook_endpoints."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "endpoint_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "test_webhook_endpoint",
+      "description": "Send a signed 'ping' event to a webhook endpoint right now and report the HTTP status it answered.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "endpoint_id": {
+            "type": "integer",
+            "description": "Webhook endpoint id, from list_webhook_endpoints."
+          }
+        },
+        "required": [
+          "endpoint_id"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "name": "weekly_report",
+      "description": "What your account did this week, which invitations are rotting, and which conversations are waiting on you."
+    },
+    {
+      "name": "wake_cold_conversations",
+      "description": "Finds the threads where you spoke last and nobody answered, and drafts a follow-up for each one."
+    },
+    {
+      "name": "reactions_to_leads",
+      "description": "Everyone who liked or commented on your recent posts, qualified and messaged — the warm audience you already earned."
+    },
+    {
+      "name": "viewers_to_leads",
+      "description": "The people who checked you out and will never message first — scored, ranked and given an opener."
+    },
+    {
+      "name": "reply_to_comments",
+      "description": "Drafts a real answer to each comment on your recent posts, in context, in the commenter's language."
+    },
+    {
+      "name": "prospect_list",
+      "description": "Describe who you want in plain words; get a real Sales Navigator search, the rows, and a personalised invitation each."
+    }
+  ],
+  "localizations": [
+    {
+      "locale": "fr-FR",
+      "name": "Reach MCP",
+      "description": "Pilotez un vrai compte LinkedIn depuis un agent IA : boîte de réception, invitations, réseau, recherche Sales Navigator en langage naturel, posts et engagement. 52 outils, 6 playbooks servis en prompts, quotas journaliers appliqués côté serveur, erreurs structurées, écritures idempotentes, webhooks signés. LinkedIn uniquement. OAuth 2.1 ou clé API ; essai 7 jours."
+    }
+  ]
+}
