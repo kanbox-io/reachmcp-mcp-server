@@ -5,7 +5,7 @@
   "description": "Operate a real LinkedIn account from an AI agent: inbox, invitations, network, Sales Navigator search in plain language, posts and engagement. 52 tools, 6 playbooks served as prompts, daily quotas enforced server-side, structured errors, idempotent writes, signed webhooks. LinkedIn only. OAuth 2.1 or API key; 7-day trial.",
   "author": "Kanbox",
   "authorUrl": "https://www.reachmcp.com",
-  "homepage": "https://github.com/JeanCarriere/reachmcp-mcp-server",
+  "homepage": "https://github.com/kanbox-io/reachmcp-mcp-server",
   "cloudEndpoint": "https://app.reachmcp.com/mcp",
   "icon": "https://www.reachmcp.com/icon-512.png",
   "category": "marketing",
