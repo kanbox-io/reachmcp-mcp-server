@@ -1,7 +1,7 @@
 {
   "identifier": "reachmcp",
   "name": "Reach MCP",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Operate a real LinkedIn account from an AI agent: inbox, invitations, network, Sales Navigator search in plain language, posts and engagement. 58 tools, 6 playbooks served as prompts, jobs that run a batch over working hours inside the quotas, daily quotas enforced server-side, structured errors, idempotent writes, signed webhooks. LinkedIn only. OAuth 2.1 or API key; 7-day trial.",
   "author": "Kanbox",
   "authorUrl": "https://www.reachmcp.com",
@@ -88,7 +88,7 @@
     },
     {
       "name": "update_account_quotas",
-      "description": "Update one or more quota configuration fields for a LinkedIn account. Only provided fields are updated.",
+      "description": "Update one or more quota configuration fields for a LinkedIn account, and its activity window (the hours, days and timezone jobs run in when a job does not set its own). Only provided fields are updated.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -131,6 +131,25 @@
           "daily_reactions_conf": {
             "type": "integer",
             "description": "Daily limit for 'reactions' on this account; 0 means unlimited."
+          },
+          "window_start": {
+            "type": "string",
+            "description": "HH:MM, in the account's timezone: jobs on this account start no earlier. Empty string resets to 09:00."
+          },
+          "window_end": {
+            "type": "string",
+            "description": "HH:MM: jobs on this account stop at this time. Empty string resets to 18:00."
+          },
+          "window_days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Weekdays jobs may run: mon, tue, wed, thu, fri, sat, sun. Empty list resets to Monday–Friday."
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA zone for the window, e.g. Europe/Paris. Empty string resets to the zone of the account's proxy country."
           },
           "idempotency_key": {
             "type": "string",
@@ -1703,7 +1722,7 @@
     },
     {
       "name": "create_job",
-      "description": "Queue a batch of LinkedIn actions (messages, invitations, profile visits or comments) that Reach executes on its own over the following hours or days: spread across the account's working window (default 09:00-18:00, Monday to Friday, in the account's timezone) with human-like gaps, never beyond the daily quota of the action. Returns immediately with a job_id and the planned schedule; the agent does not have to stay alive. The job pauses by itself when a quota is reached or the account disconnects and resumes when it can; webhooks job.started / job.progress / job.paused / job.completed report what happens. Use it for anything above a handful of actions instead of calling send_message or connect in a loop. Always show the user the items before queuing them.",
+      "description": "Queue a batch of LinkedIn actions (messages, invitations, profile visits or comments) that Reach executes on its own over the following hours or days: spread across the account's activity window (set per account with update_account_quotas; default 09:00-18:00, Monday to Friday, in the account's timezone; overridable per job) with human-like gaps, never beyond the daily quota of the action. Returns immediately with a job_id and the planned schedule; the agent does not have to stay alive. The job pauses by itself when a quota is reached or the account disconnects and resumes when it can; webhooks job.started / job.progress / job.paused / job.completed report what happens. Use it for anything above a handful of actions instead of calling send_message or connect in a loop. Always show the user the items before queuing them.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1737,22 +1756,22 @@
           },
           "window_start": {
             "type": "string",
-            "description": "HH:MM in the job's timezone; default 09:00."
+            "description": "HH:MM in the job's timezone; default: the account's window (09:00 unless changed)."
           },
           "window_end": {
             "type": "string",
-            "description": "HH:MM in the job's timezone; default 18:00."
+            "description": "HH:MM in the job's timezone; default: the account's window (18:00 unless changed)."
           },
           "days": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Weekdays the job may run: mon, tue, wed, thu, fri, sat, sun. Default Monday to Friday."
+            "description": "Weekdays the job may run: mon, tue, wed, thu, fri, sat, sun. Default: the account's window (Monday to Friday unless changed)."
           },
           "timezone": {
             "type": "string",
-            "description": "IANA zone such as Europe/Paris. Default: derived from the account's proxy country."
+            "description": "IANA zone such as Europe/Paris. Default: the account's window setting, else the zone of its proxy country."
           },
           "idempotency_key": {
             "type": "string",
