@@ -24,15 +24,15 @@ Reach MCP lets an AI agent operate a **real LinkedIn account** from Claude, Chat
 | Start here | `reach_playbooks` |
 | Inbox | `list_conversations`, `list_conversation_messages`, `send_message`, `react_message`, `star_conversation`, `archive_conversation`, `delete_conversation` |
 | Sales Navigator inbox | `salesnav_list_messaging_threads`, `salesnav_list_thread_messages`, `salesnav_send_message` |
-| Network | `list_connections`, `connect`, `invitation_status`, `withdraw_invitation`, `accept_invitation`, `decline_invitation`, `remove_connection`, `follow`, `list_received_invitations`, `list_sent_invitations` |
+| Network | `list_connections`, `send_invitation`, `get_invitation_status`, `withdraw_invitation`, `accept_invitation`, `decline_invitation`, `remove_connection`, `follow_member`, `list_received_invitations`, `list_sent_invitations` |
 | Profiles & search | `scrape_profile`, `scrape_search`, `visit_profile`, `profile_viewers`, `salesnav_resolve_industry`, `salesnav_typeahead`, `salesnav_build_search_url` |
-| Posts & engagement | `user_posts`, `scrape_post`, `scrape_my_posts`, `like_post`, `comment_post`, `reply_comment` |
+| Posts & engagement | `list_user_posts`, `scrape_post`, `scrape_my_posts`, `like_post`, `comment_post`, `reply_comment` |
 | Publishing | `create_post`, `list_scheduled_posts`, `update_scheduled_post`, `delete_scheduled_post`, `upload_media_from_url`, `create_multi_photo` |
 | Accounts & quotas | `list_accounts`, `get_me`, `get_account_quotas`, `update_account_quotas`, `get_account_request_logs`, `get_account_request_logs_stats`, `delete_account` |
 | Webhooks | `list_webhook_endpoints`, `create_webhook_endpoint`, `update_webhook_endpoint`, `delete_webhook_endpoint`, `test_webhook_endpoint` |
 | Jobs | `create_job`, `get_job`, `list_jobs`, `cancel_job`, `pause_job`, `resume_job` — a batch of messages, invitations, visits or comments Reach runs over working hours, inside the quotas, with `job.*` webhooks |
 
-Every tool carries MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`), a description on every parameter, and an output schema.
+Every tool carries MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`), a description on every parameter, usage guidance (when to use it, when not, the sibling to prefer), and an output schema. `https://app.reachmcp.com/mcp?tools=core` lists a lighter **core** profile of 31 tools for clients that want less in the model's context.
 
 ## Six playbooks, served as MCP prompts
 

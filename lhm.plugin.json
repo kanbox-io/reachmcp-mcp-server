@@ -1,7 +1,7 @@
 {
   "identifier": "reachmcp",
   "name": "Reach MCP",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Operate a real LinkedIn account from an AI agent: inbox, invitations, network, Sales Navigator search in plain language, posts and engagement. 58 tools, 6 playbooks served as prompts, jobs that run a batch over working hours inside the quotas, daily quotas enforced server-side, structured errors, idempotent writes, signed webhooks. LinkedIn only. OAuth 2.1 or API key; 7-day trial.",
   "author": "Kanbox",
   "authorUrl": "https://www.reachmcp.com",
@@ -22,7 +22,7 @@
   "tools": [
     {
       "name": "reach_playbooks",
-      "description": "START HERE. Return the catalogue of ready-made LinkedIn playbooks — what this server can actually accomplish, as named workflows rather than raw endpoints. Each entry carries its tool sequence, its prerequisites, and the full instructions to run it. Call this first when the user asks what you can do with their LinkedIn account, or when a request is vague. Pass playbook_id to get one playbook's instructions and then follow them.",
+      "description": "START HERE. Return the catalogue of ready-made LinkedIn playbooks — what this server can actually accomplish, as named workflows rather than raw endpoints. Each entry carries its tool sequence, its prerequisites, and the full instructions to run it. Call this first when the user asks what you can do with their LinkedIn account, or when a request is vague. Pass playbook_id to get one playbook's instructions and then follow them. Use first for a vague request or 'what can you do'; not needed when the user names a precise action.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -40,7 +40,7 @@
     },
     {
       "name": "list_accounts",
-      "description": "Return LinkedIn accounts accessible with the provided API key. If the key is restricted, only allowed account IDs are returned.",
+      "description": "Return LinkedIn accounts accessible with the provided API key. If the key is restricted, only allowed account IDs are returned. Use first in every session to get the account_id the other tools need; ask which account when several are listed.",
       "inputSchema": {
         "type": "object",
         "properties": {},
@@ -49,7 +49,7 @@
     },
     {
       "name": "delete_account",
-      "description": "Delete a LinkedIn account by account_id. Also clears invitation references before deletion.",
+      "description": "Delete a LinkedIn account by account_id. Also clears invitation references before deletion. Removes the account from Reach only (LinkedIn is untouched); irreversible, requires the user's explicit confirmation. Not for disconnecting temporarily.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -71,7 +71,7 @@
     },
     {
       "name": "get_account_quotas",
-      "description": "Get the quotas configuration and usage counters for a LinkedIn account.",
+      "description": "Get the quotas configuration and usage counters for a LinkedIn account. Use before a batch to know what is left today; use update_account_quotas to change limits or the activity window.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -88,7 +88,7 @@
     },
     {
       "name": "update_account_quotas",
-      "description": "Update one or more quota configuration fields for a LinkedIn account, and its activity window (the hours, days and timezone jobs run in when a job does not set its own). Only provided fields are updated.",
+      "description": "Update one or more quota configuration fields for a LinkedIn account, and its activity window (the hours, days and timezone jobs run in when a job does not set its own). Only provided fields are updated. Changes limits and the activity window for jobs; does not reset today's counters. Raising a limit is the user's decision, ask first.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -165,7 +165,7 @@
     },
     {
       "name": "get_account_request_logs",
-      "description": "Get request logs for a LinkedIn account with optional filtering by request_type and pagination using limit/offset.",
+      "description": "Get request logs for a LinkedIn account with optional filtering by request_type and pagination using limit/offset. Use to debug a failing account (each LinkedIn call with its status); for totals use get_account_request_logs_stats.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -194,7 +194,7 @@
     },
     {
       "name": "get_account_request_logs_stats",
-      "description": "Get aggregated request-log statistics for a LinkedIn account, grouped by day, week, or month, with optional action and date-range filters.",
+      "description": "Get aggregated request-log statistics for a LinkedIn account, grouped by day, week, or month, with optional action and date-range filters. Use for the weekly review or to size an account's activity; for individual calls use get_account_request_logs.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -234,7 +234,7 @@
     },
     {
       "name": "get_me",
-      "description": "Call LinkedIn Voyager /me for an account through the stored proxy/cookies and return the normalized profile (same fields as Kanbox uses from /me).",
+      "description": "Call LinkedIn Voyager /me for an account through the stored proxy/cookies and return the normalized profile (same fields as Kanbox uses from /me). Use to confirm which LinkedIn profile an account is (name, headline, premium); one LinkedIn call. Not needed before every action.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -251,7 +251,7 @@
     },
     {
       "name": "list_connections",
-      "description": "List LinkedIn 1st-degree connections for an account (Voyager dash connections), paged with start/count — same payload as GET /api/linkedin/{account_id}/connections.",
+      "description": "List LinkedIn 1st-degree connections for an account (Voyager dash connections), paged with start/count — same payload as GET /api/linkedin/{account_id}/connections. Use to walk the account's own 1st-degree network; for pending invitations use list_sent_invitations or list_received_invitations; for search use scrape_search.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -279,7 +279,7 @@
     },
     {
       "name": "list_conversations",
-      "description": "List LinkedIn messenger conversations (Voyager Messaging GraphQL), with optional archived, unread, starred filters and next_cursor paging — same as GET /api/linkedin/{account_id}/conversations. Each item returns conversation_id (the thread id — use this as conversation_linkedin_id when fetching messages or replying) and recipient_linkedin_id (the peer's fsd_profile id — use this as recipient_linkedin_id when sending a new message).",
+      "description": "List LinkedIn messenger conversations (Voyager Messaging GraphQL), with optional archived, unread, starred filters and next_cursor paging — same as GET /api/linkedin/{account_id}/conversations. Each item returns conversation_id (the thread id — use this as conversation_linkedin_id when fetching messages or replying) and recipient_linkedin_id (the peer's fsd_profile id — use this as recipient_linkedin_id when sending a new message). Use for the classic LinkedIn inbox (this is the one that matters in 95% of cases); Sales Navigator threads are separate, see salesnav_list_messaging_threads.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -318,7 +318,7 @@
     },
     {
       "name": "list_conversation_messages",
-      "description": "List messages in a LinkedIn conversation via Voyager ``/messaging/conversations/{id}/events`` (Kanbox ``get_conversation_messages``), with optional created_before paging — same as GET /api/linkedin/{account_id}/conversations/{conversation_linkedin_id}/messages.",
+      "description": "List messages in a LinkedIn conversation via Voyager ``/messaging/conversations/{id}/events`` (Kanbox ``get_conversation_messages``), with optional created_before paging — same as GET /api/linkedin/{account_id}/conversations/{conversation_linkedin_id}/messages. Use after list_conversations to read a thread before replying; the conversation_linkedin_id comes from list_conversations.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -344,7 +344,7 @@
     },
     {
       "name": "list_scheduled_posts",
-      "description": "List scheduled LinkedIn posts for an account, paged. Returns post URNs, text content, and scheduled publish times.",
+      "description": "List scheduled LinkedIn posts for an account, paged. Returns post URNs, text content, and scheduled publish times. Use to see what is queued to publish; published posts are not listed here, use list_user_posts for those.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -371,7 +371,7 @@
     },
     {
       "name": "update_scheduled_post",
-      "description": "Update the text and/or scheduled time of an existing scheduled LinkedIn post. post_urn is the URN returned by list_scheduled_posts (e.g. urn:li:ugcPost:…). At least one of text or scheduled_at must be provided.",
+      "description": "Update the text and/or scheduled time of an existing scheduled LinkedIn post. post_urn is the URN returned by list_scheduled_posts (e.g. urn:li:ugcPost:…). At least one of text or scheduled_at must be provided. Only for posts still scheduled (post_urn from list_scheduled_posts); a published post cannot be edited through Reach.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -406,7 +406,7 @@
     },
     {
       "name": "delete_scheduled_post",
-      "description": "Delete a scheduled LinkedIn post. post_urn is the URN returned by list_scheduled_posts (e.g. urn:li:ugcPost:…).",
+      "description": "Delete a scheduled LinkedIn post. post_urn is the URN returned by list_scheduled_posts (e.g. urn:li:ugcPost:…). Only for posts still scheduled; irreversible, confirm with the user. A published post cannot be deleted through Reach.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -433,7 +433,7 @@
     },
     {
       "name": "upload_media_from_url",
-      "description": "Upload an image to LinkedIn by fetching it from a public URL. Returns a digitalmediaAsset URN (urn:li:digitalmediaAsset:…) that can be passed to create_post (single image) or create_multi_photo (multi-photo). Use this instead of upload-media when working as an agent — no binary file upload needed.",
+      "description": "Upload an image to LinkedIn by fetching it from a public URL. Returns a digitalmediaAsset URN (urn:li:digitalmediaAsset:…) that can be passed to create_post (single image) or create_multi_photo (multi-photo). Use this instead of upload-media when working as an agent — no binary file upload needed. Use before create_post when the post needs an image; returns the URN create_post expects. For several images, then create_multi_photo.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -465,7 +465,7 @@
     },
     {
       "name": "create_multi_photo",
-      "description": "Create a LinkedIn multi-photo object from a list of digitalmediaAsset URNs. Returns an identifierUrn (urn:li:fsd_multiPhoto:…) to pass to create_post. author_urn is the urn:li:fsd_profile:… of the connected account (get it from get_me).",
+      "description": "Create a LinkedIn multi-photo object from a list of digitalmediaAsset URNs. Returns an identifierUrn (urn:li:fsd_multiPhoto:…) to pass to create_post. author_urn is the urn:li:fsd_profile:… of the connected account (get it from get_me). Use after uploading two or more images with upload_media_from_url; returns the single URN create_post takes. Not for one image.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -507,7 +507,7 @@
     },
     {
       "name": "create_post",
-      "description": "Create or schedule a LinkedIn post, optionally with a media attachment. For a single image pass a urn:li:digitalmediaAsset:… URN; for multiple images pass a urn:li:fsd_multiPhoto:… URN from create_multi_photo. Set scheduled_at (Unix ms) to schedule; omit it to publish immediately.",
+      "description": "Create or schedule a LinkedIn post, optionally with a media attachment. For a single image pass a urn:li:digitalmediaAsset:… URN; for multiple images pass a urn:li:fsd_multiPhoto:… URN from create_multi_photo. Set scheduled_at (Unix ms) to schedule; omit it to publish immediately. Publishes now or schedules (scheduled_time); counts against the daily posts quota. Show the user the full text before calling.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -552,7 +552,7 @@
     },
     {
       "name": "send_message",
-      "description": "Send a LinkedIn DM via Voyager createMessage: use conversation_linkedin_id for an existing thread or recipient_linkedin_id for a new DM.",
+      "description": "Send a LinkedIn DM via Voyager createMessage: use conversation_linkedin_id for an existing thread or recipient_linkedin_id for a new DM. Use for the classic inbox: conversation_linkedin_id to reply in a thread, recipient_linkedin_id for a new one (1st-degree connections, or InMail). Counts against the daily messages quota; for a Sales Navigator thread use salesnav_send_message; for more than ten messages use create_job.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -590,7 +590,7 @@
     },
     {
       "name": "scrape_profile",
-      "description": "Fetch a complete LinkedIn profile (name, headline, company, experience, skills…). Pass a LinkedIn URL, vanity name, internal member ID, or Sales Navigator lead URL. Uses SalesNav API when available for richer data.",
+      "description": "Fetch a complete LinkedIn profile (name, headline, company, experience, skills…). Pass a LinkedIn URL, vanity name, internal member ID, or Sales Navigator lead URL. Uses SalesNav API when available for richer data. Use to read one person in depth (experience, skills, company); costly, one LinkedIn call per profile. For a list of people use scrape_search; to just check the relationship use get_invitation_status.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -612,7 +612,7 @@
     },
     {
       "name": "scrape_search",
-      "description": "Run one page of a LinkedIn, Sales Navigator, or Recruiter search and return normalized profile rows. Pass the full search URL. Use start+count to paginate (count ignored for standard LinkedIn, fixed ~10/page).",
+      "description": "Run one page of a LinkedIn, Sales Navigator, or Recruiter search and return normalized profile rows. Pass the full search URL. Use start+count to paginate (count ignored for standard LinkedIn, fixed ~10/page). Use to run a search URL you have (LinkedIn, Sales Navigator, Recruiter) one page at a time; build the Sales Navigator URL with salesnav_build_search_url first. Counts against the imports quota.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -644,7 +644,7 @@
     },
     {
       "name": "visit_profile",
-      "description": "Simulate a profile view, triggering a 'viewed your profile' notification for the target member.",
+      "description": "Simulate a profile view, triggering a 'viewed your profile' notification for the target member. Use to leave a 'viewed your profile' trace as a soft touch before an invitation; counts against the daily visits quota. Not needed to read a profile, use scrape_profile.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -671,7 +671,7 @@
     },
     {
       "name": "profile_viewers",
-      "description": "Get the list of members who recently viewed the account's profile (requires LinkedIn Premium).",
+      "description": "Get the list of members who recently viewed the account's profile (requires LinkedIn Premium). Use for the 'who viewed my profile' list (needs LinkedIn Premium; empty or an error otherwise). Read-only.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -687,8 +687,8 @@
       }
     },
     {
-      "name": "user_posts",
-      "description": "Get recent posts published by a LinkedIn member (via profileUpdatesV2). Paginate with start/count.",
+      "name": "list_user_posts",
+      "description": "Get recent posts published by a LinkedIn member (via profileUpdatesV2). Paginate with start/count. Use to read what a member published recently (their content, not who engaged); to get likers and commenters of a post use scrape_post. Read-only.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -720,7 +720,7 @@
     },
     {
       "name": "scrape_post",
-      "description": "Fetch likers and/or commenters for a LinkedIn post. Pass the full post URL or slug. Set liked=true and/or comments=true.",
+      "description": "Fetch likers and/or commenters for a LinkedIn post. Pass the full post URL or slug. Set liked=true and/or comments=true. Use to get the people who liked or commented on one post you have the URL of; for the account's own recent posts use scrape_my_posts. Counts against the imports quota.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -752,7 +752,7 @@
     },
     {
       "name": "scrape_my_posts",
-      "description": "Fetch likers and/or commenters for the account's own recent posts. since_hours limits to posts published in the last N hours (default 24).",
+      "description": "Fetch likers and/or commenters for the account's own recent posts. since_hours limits to posts published in the last N hours (default 24). Use for engagement on the account's own posts (likers, commenters, comment URNs for reply_comment); for someone else's post use scrape_post.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -789,7 +789,7 @@
     },
     {
       "name": "like_post",
-      "description": "Like a LinkedIn post on behalf of the connected account. Pass the post URL, slug, or URN.",
+      "description": "Like a LinkedIn post on behalf of the connected account. Pass the post URL, slug, or URN. Use for a light touch on a post; idempotent on LinkedIn's side. Counts against the daily reactions quota.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -816,7 +816,7 @@
     },
     {
       "name": "comment_post",
-      "description": "Post a comment on a LinkedIn post on behalf of the connected account.",
+      "description": "Post a comment on a LinkedIn post on behalf of the connected account. Use to write a new top-level comment on a post; to answer an existing comment use reply_comment. Counts against the daily comments quota; the text is public, preview it with the user.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -848,7 +848,7 @@
     },
     {
       "name": "reply_comment",
-      "description": "Post a reply to an existing LinkedIn comment. Pass the comment_id (URN) returned by scrape_post as comment_urn — it is used directly as threadUrn.",
+      "description": "Post a reply to an existing LinkedIn comment. Pass the comment_id (URN) returned by scrape_post as comment_urn — it is used directly as threadUrn. Use to answer a specific comment (comment_urn from scrape_my_posts or scrape_post); for a new comment on the post itself use comment_post. Counts against the daily comments quota.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -880,7 +880,7 @@
     },
     {
       "name": "star_conversation",
-      "description": "Star or unstar a LinkedIn conversation. Set star=false to remove the star. conversation_linkedin_id is the conversation_id returned by list_conversations.",
+      "description": "Star or unstar a LinkedIn conversation. Set star=false to remove the star. conversation_linkedin_id is the conversation_id returned by list_conversations. Housekeeping in the classic inbox; reversible (star=false). No quota.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -912,7 +912,7 @@
     },
     {
       "name": "archive_conversation",
-      "description": "Archive or unarchive a LinkedIn conversation. Set archive=false to unarchive. conversation_linkedin_id is the conversation_id returned by list_conversations.",
+      "description": "Archive or unarchive a LinkedIn conversation. Set archive=false to unarchive. conversation_linkedin_id is the conversation_id returned by list_conversations. Housekeeping in the classic inbox; reversible (archive=false). Not a delete, see delete_conversation.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -944,7 +944,7 @@
     },
     {
       "name": "delete_conversation",
-      "description": "Permanently delete a LinkedIn conversation. conversation_linkedin_id is the conversation_id returned by list_conversations.",
+      "description": "Permanently delete a LinkedIn conversation. conversation_linkedin_id is the conversation_id returned by list_conversations. Irreversible for this account; confirm with the user. To hide a thread without losing it use archive_conversation.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -971,7 +971,7 @@
     },
     {
       "name": "react_message",
-      "description": "Add or remove an emoji reaction on a LinkedIn message. Set react=false to remove the reaction. message_urn is the message_urn returned by list_conversation_messages (e.g. urn:li:msg_message:(urn:li:fsd_profile:…,123456789)). emoji is a Unicode emoji character (e.g. 👍, ❤️). Pass conversation_linkedin_id to also mark the conversation as read.",
+      "description": "Add or remove an emoji reaction on a LinkedIn message. Set react=false to remove the reaction. message_urn is the message_urn returned by list_conversation_messages (e.g. urn:li:msg_message:(urn:li:fsd_profile:…,123456789)). emoji is a Unicode emoji character (e.g. 👍, ❤️). Pass conversation_linkedin_id to also mark the conversation as read. Use for an emoji reaction on one message inside a thread (message_urn from list_conversation_messages); to reply in words use send_message.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1011,8 +1011,8 @@
       }
     },
     {
-      "name": "connect",
-      "description": "Send a connection request to a LinkedIn member. Optional message capped at 300 chars (premium) or 200 chars.",
+      "name": "send_invitation",
+      "description": "Send a connection request to a LinkedIn member. Optional message capped at 300 chars (premium) or 200 chars. Use to connect with someone not yet a 1st-degree connection; check get_invitation_status first to avoid duplicates. Counts against the daily invitations quota; for more than ten use create_job. To follow without connecting use follow_member.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1042,8 +1042,8 @@
       }
     },
     {
-      "name": "invitation_status",
-      "description": "Get the connection and invitation status between the connected account and a LinkedIn member. Returns is_connection, invitation_type (SENT/PENDING/WITHDRAWN/REFUSED).",
+      "name": "get_invitation_status",
+      "description": "Get the connection and invitation status between the connected account and a LinkedIn member. Returns is_connection, invitation_type (SENT/PENDING/WITHDRAWN/REFUSED). Use before send_invitation or send_message to know the relationship (connected, invitation pending, refused). Read-only, cheap.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1065,7 +1065,7 @@
     },
     {
       "name": "withdraw_invitation",
-      "description": "Withdraw a pending sent connection request.",
+      "description": "Withdraw a pending sent connection request. Use to cancel a pending sent invitation (from list_sent_invitations), for example one older than three weeks. Not for received invitations, see decline_invitation.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1092,7 +1092,7 @@
     },
     {
       "name": "accept_invitation",
-      "description": "Accept a pending received connection request.",
+      "description": "Accept a pending received connection request. Use to accept a received invitation (invitation_secret from list_received_invitations). Ask the user which ones.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1119,7 +1119,7 @@
     },
     {
       "name": "decline_invitation",
-      "description": "Decline/ignore a pending received connection request.",
+      "description": "Decline/ignore a pending received connection request. Use to ignore a received invitation; the sender is not notified. Not for invitations the account sent, see withdraw_invitation.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1146,7 +1146,7 @@
     },
     {
       "name": "remove_connection",
-      "description": "Remove an existing 1st-degree connection.",
+      "description": "Remove an existing 1st-degree connection. Irreversible on LinkedIn (the person is not notified); confirm with the user. Not for pending invitations, see withdraw_invitation.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1172,8 +1172,8 @@
       }
     },
     {
-      "name": "follow",
-      "description": "Follow or unfollow a LinkedIn member without connecting. Set follow=false to unfollow.",
+      "name": "follow_member",
+      "description": "Follow or unfollow a LinkedIn member without connecting. Set follow=false to unfollow. Use to follow someone's posts without a connection request (no quota); to connect use send_invitation.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1205,7 +1205,7 @@
     },
     {
       "name": "list_received_invitations",
-      "description": "List pending connection invitations received by the account (with invitation_secret to accept them).",
+      "description": "List pending connection invitations received by the account (with invitation_secret to accept them). Use to triage invitations waiting for the account (then accept_invitation or decline_invitation); for those the account sent use list_sent_invitations.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1232,7 +1232,7 @@
     },
     {
       "name": "list_sent_invitations",
-      "description": "List pending connection invitations sent by the account that have not yet been accepted.",
+      "description": "List pending connection invitations sent by the account that have not yet been accepted. Use to find invitations the account sent that are still pending (then withdraw_invitation if stale); for received ones use list_received_invitations.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1259,7 +1259,7 @@
     },
     {
       "name": "salesnav_list_thread_messages",
-      "description": "Fetch a Sales Navigator thread with all its messages and participant profiles (salesApiMessagingThreads/{id}). Requires a Sales Navigator subscription. Use the thread id returned by salesnav_list_messaging_threads. message_count controls how many (most recent) messages are returned; compare with total_message_count in the response to know if more exist.",
+      "description": "Fetch a Sales Navigator thread with all its messages and participant profiles (salesApiMessagingThreads/{id}). Requires a Sales Navigator subscription. Use the thread id returned by salesnav_list_messaging_threads. message_count controls how many (most recent) messages are returned; compare with total_message_count in the response to know if more exist. Use to read one Sales Navigator thread (thread id from salesnav_list_messaging_threads); classic inbox threads use list_conversation_messages.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1288,7 +1288,7 @@
     },
     {
       "name": "salesnav_send_message",
-      "description": "Send a message in an existing Sales Navigator thread (salesApiMessageActions). Requires the account to have a Sales Navigator subscription. Use the thread id returned by salesnav_list_messaging_threads.",
+      "description": "Send a message in an existing Sales Navigator thread (salesApiMessageActions). Requires the account to have a Sales Navigator subscription. Use the thread id returned by salesnav_list_messaging_threads. Use only to reply inside an existing Sales Navigator thread; everything else (new messages, classic inbox) goes through send_message. Counts against the daily messages quota.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1325,7 +1325,7 @@
     },
     {
       "name": "salesnav_list_messaging_threads",
-      "description": "List Sales Navigator messaging threads (salesApiMessagingThreads). Requires the account to have a Sales Navigator subscription (has_sales_nav). Returns threads with messages and participant profiles. Paginate by passing next_page_starts_at from the previous response as page_starts_at.",
+      "description": "List Sales Navigator messaging threads (salesApiMessagingThreads). Requires the account to have a Sales Navigator subscription (has_sales_nav). Returns threads with messages and participant profiles. Paginate by passing next_page_starts_at from the previous response as page_starts_at. Use only when the account has Sales Navigator and the user asks about that inbox; the classic inbox is list_conversations.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1366,7 +1366,7 @@
     },
     {
       "name": "salesnav_resolve_industry",
-      "description": "Resolve an industry name (any language) to its LinkedIn Industry Code(s) using the bundled Industry Codes V2 taxonomy (offline, no LinkedIn call). Returns ranked candidates with id, label and hierarchy path. Use the returned id(s) in salesnav_build_search_url's `industry` filter. Call once per industry term; if several candidates look plausible, pick by the hierarchy path.",
+      "description": "Resolve an industry name (any language) to its LinkedIn Industry Code(s) using the bundled Industry Codes V2 taxonomy (offline, no LinkedIn call). Returns ranked candidates with id, label and hierarchy path. Use the returned id(s) in salesnav_build_search_url's `industry` filter. Call once per industry term; if several candidates look plausible, pick by the hierarchy path. Use for industries only (offline taxonomy, any language, no LinkedIn call); for locations, companies, schools and titles use salesnav_typeahead.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1390,7 +1390,7 @@
     },
     {
       "name": "salesnav_typeahead",
-      "description": "Live Sales Navigator autocomplete for facets whose ids are dynamic. Use type='geo' to resolve a location to its REGION id (the only reliable way — LinkedIn region ids are not enumerable), and type='company' / 'school' / 'title' for those entity facets. Returns [{id, displayValue, headline}]. Feed the chosen id into salesnav_build_search_url (region / current_company / school / current_title). Requires a connected account.",
+      "description": "Live Sales Navigator autocomplete for facets whose ids are dynamic. Use type='geo' to resolve a location to its REGION id (the only reliable way — LinkedIn region ids are not enumerable), and type='company' / 'school' / 'title' for those entity facets. Returns [{id, displayValue, headline}]. Feed the chosen id into salesnav_build_search_url (region / current_company / school / current_title). Requires a connected account. Use for facets whose ids are dynamic (geo, company, school, title…); for industries use salesnav_resolve_industry. One LinkedIn call per lookup.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1432,7 +1432,7 @@
     },
     {
       "name": "salesnav_build_search_url",
-      "description": "Build a Sales Navigator people-search URL from structured lead-search filters, using as many filters as the request implies. RESOLUTION: `industry` accepts numeric ids OR names (auto-resolved via the taxonomy); `region` accepts numeric REGION ids OR location names (auto-resolved via geo typeahead — needs account_id). If a name is ambiguous, the tool returns {needs_disambiguation:[...]} with candidates instead of a URL — re-call with the chosen id. BOOLEAN: `keywords` and `current_title` accept LinkedIn boolean syntax (AND/OR/NOT, quotes, parentheses). EXCLUSION: any list value may be an object {id|name, exclude:true}. Set execute=true to also run the first page of results (reuses the live search) and return leads.",
+      "description": "Build a Sales Navigator people-search URL from structured lead-search filters, using as many filters as the request implies. RESOLUTION: `industry` accepts numeric ids OR names (auto-resolved via the taxonomy); `region` accepts numeric REGION ids OR location names (auto-resolved via geo typeahead — needs account_id). If a name is ambiguous, the tool returns {needs_disambiguation:[...]} with candidates instead of a URL — re-call with the chosen id. BOOLEAN: `keywords` and `current_title` accept LinkedIn boolean syntax (AND/OR/NOT, quotes, parentheses). EXCLUSION: any list value may be an object {id|name, exclude:true}. Set execute=true to also run the first page of results (reuses the live search) and return leads. Use after resolving the ids to get the Sales Navigator search URL, then scrape_search on it. Builds a URL only, no LinkedIn call.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1583,7 +1583,7 @@
     },
     {
       "name": "list_webhook_endpoints",
-      "description": "List the webhooks registered for this user: the URLs Reach calls when a conversation gets a new message (message.received), the account gains a 1st-degree connection (connection.new), an account changes connection state (account.status_changed) or a daily quota is close to or at its limit (quota.threshold_reached, quota.reached). Read-only.",
+      "description": "List the webhooks registered for this user: the URLs Reach calls when a conversation gets a new message (message.received), the account gains a 1st-degree connection (connection.new), an account changes connection state (account.status_changed) or a daily quota is close to or at its limit (quota.threshold_reached, quota.reached). Read-only. Use to see where Reach already posts events and which events; also returns the event catalogue.",
       "inputSchema": {
         "type": "object",
         "properties": {},
@@ -1592,7 +1592,7 @@
     },
     {
       "name": "create_webhook_endpoint",
-      "description": "Register a URL to be called when something happens on LinkedIn, so an agent or an n8n/Make workflow can react instead of polling. Returns the signing secret ONCE; deliveries carry 'Reach-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, t + '.' + body)>'. Events: message.received, connection.new, account.status_changed, quota.threshold_reached, quota.reached, or '*' for all. Omit account_ids to subscribe for every account of the user. https only.",
+      "description": "Register a URL to be called when something happens on LinkedIn, so an agent or an n8n/Make workflow can react instead of polling. Returns the signing secret ONCE; deliveries carry 'Reach-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, t + '.' + body)>'. Events: message.received, connection.new, account.status_changed, quota.threshold_reached, quota.reached, or '*' for all. Omit account_ids to subscribe for every account of the user. https only. Use when the user wants to react to a reply, a new connection, a quota alert or a job event from n8n, Make or their own code; needs an https URL they control. Not for the model to call itself.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1634,7 +1634,7 @@
     },
     {
       "name": "update_webhook_endpoint",
-      "description": "Change a webhook's url, events, account_ids, description or is_active. Only provided fields change. Re-enabling clears the failure counter.",
+      "description": "Change a webhook's url, events, account_ids, description or is_active. Only provided fields change. Re-enabling clears the failure counter. Use to change events, accounts or url, or to re-enable an endpoint disabled after failures; to stop deliveries temporarily set is_active=false rather than deleting.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1683,7 +1683,7 @@
     },
     {
       "name": "delete_webhook_endpoint",
-      "description": "Delete a webhook endpoint and its delivery history.",
+      "description": "Delete a webhook endpoint and its delivery history. Irreversible (the delivery history goes too); confirm with the user. To pause deliveries use update_webhook_endpoint with is_active=false.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1705,7 +1705,7 @@
     },
     {
       "name": "test_webhook_endpoint",
-      "description": "Send a signed 'ping' event to a webhook endpoint right now and report the HTTP status it answered.",
+      "description": "Send a signed 'ping' event to a webhook endpoint right now and report the HTTP status it answered. Use to check a receiver end to end (signed ping, HTTP status back); does not deliver real events.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1722,7 +1722,7 @@
     },
     {
       "name": "create_job",
-      "description": "Queue a batch of LinkedIn actions (messages, invitations, profile visits or comments) that Reach executes on its own over the following hours or days: spread across the account's activity window (set per account with update_account_quotas; default 09:00-18:00, Monday to Friday, in the account's timezone; overridable per job) with human-like gaps, never beyond the daily quota of the action. Returns immediately with a job_id and the planned schedule; the agent does not have to stay alive. The job pauses by itself when a quota is reached or the account disconnects and resumes when it can; webhooks job.started / job.progress / job.paused / job.completed report what happens. Use it for anything above a handful of actions instead of calling send_message or connect in a loop. Always show the user the items before queuing them.",
+      "description": "Queue a batch of LinkedIn actions (messages, invitations, profile visits or comments) that Reach executes on its own over the following hours or days: spread across the account's activity window (set per account with update_account_quotas; default 09:00-18:00, Monday to Friday, in the account's timezone; overridable per job) with human-like gaps, never beyond the daily quota of the action. Returns immediately with a job_id and the planned schedule; the agent does not have to stay alive. The job pauses by itself when a quota is reached or the account disconnects and resumes when it can; webhooks job.started / job.progress / job.paused / job.completed report what happens. Use it for anything above a handful of actions instead of calling send_message or send_invitation in a loop. Always show the user the items before queuing them. Use for any batch above a handful of actions; returns at once with the schedule. Show the items to the user first. Not for a single action, call the direct tool.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1734,11 +1734,11 @@
             "type": "string",
             "enum": [
               "send_message",
-              "connect",
+              "send_invitation",
               "visit_profile",
               "comment_post"
             ],
-            "description": "What every item does. send_message: text + conversation_linkedin_id (reply) or recipient_linkedin_id (new thread). connect: linkedin_id_or_url + optional message (<200 chars). visit_profile: linkedin_id_or_url. comment_post: post_url_or_urn + text."
+            "description": "What every item does. send_message: text + conversation_linkedin_id (reply) or recipient_linkedin_id (new thread). send_invitation: linkedin_id_or_url + optional message (<200 chars). visit_profile: linkedin_id_or_url. comment_post: post_url_or_urn + text."
           },
           "items": {
             "type": "array",
@@ -1789,7 +1789,7 @@
     },
     {
       "name": "get_job",
-      "description": "One job with its status, totals, next execution time and every item (scheduled time, result or error).",
+      "description": "One job with its status, totals, next execution time and every item (scheduled time, result or error). Use to report progress or to see why an item failed; for an overview of all jobs use list_jobs.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1806,7 +1806,7 @@
     },
     {
       "name": "list_jobs",
-      "description": "Jobs of this user, newest first, without their items. Filter by account or status (scheduled, running, paused, completed, cancelled).",
+      "description": "Jobs of this user, newest first, without their items. Filter by account or status (scheduled, running, paused, completed, cancelled). Use to find running or paused jobs before creating a new one on the same account; details and items are in get_job.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1837,7 +1837,7 @@
     },
     {
       "name": "cancel_job",
-      "description": "Cancel a job: its pending items will never run. Items already executed are unaffected. Cannot be undone.",
+      "description": "Cancel a job: its pending items will never run. Items already executed are unaffected. Cannot be undone. Irreversible for the pending items (executed ones stay); confirm with the user. To stop temporarily use pause_job.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1859,7 +1859,7 @@
     },
     {
       "name": "pause_job",
-      "description": "Pause a job: nothing more runs until resume_job is called. Reach also pauses a job by itself when a quota is reached or the account disconnects, and resumes those on its own.",
+      "description": "Pause a job: nothing more runs until resume_job is called. Reach also pauses a job by itself when a quota is reached or the account disconnects, and resumes those on its own. Use to hold a job the user is unsure about; resume_job re-plans it. Reach pauses on quota or disconnection by itself.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1881,7 +1881,7 @@
     },
     {
       "name": "resume_job",
-      "description": "Resume a paused job. Its pending items are re-planned from now, inside the window and the remaining quota.",
+      "description": "Resume a paused job. Its pending items are re-planned from now, inside the window and the remaining quota. Use after a manual pause; jobs paused for quota or disconnection resume on their own and need no call.",
       "inputSchema": {
         "type": "object",
         "properties": {
