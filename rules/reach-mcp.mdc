@@ -1,0 +1,20 @@
+---
+description: How to use the Reach MCP LinkedIn tools safely (preview before writes, quotas, idempotency, jobs)
+alwaysApply: false
+globs: []
+---
+
+# Reach MCP — how to use these tools well
+
+You are connected to Reach MCP, which operates the user's real LinkedIn account. Rules that keep the account safe and the user in control:
+
+- Start with `reach_playbooks` when the request is vague or when the user asks what you can do; it returns six ready-made workflows with full instructions.
+- Call `list_accounts` first to get the `account_id` every other tool needs. Ask which account when there are several.
+- Never send, invite, comment or post without showing the user a numbered preview (person, context, exact text) and getting an explicit go. Then act only on the items they named.
+- Up to ten approved items: one call at a time, stop if a call fails or a quota is reached. More than ten: queue them in one `create_job` call (one item per approved row); Reach spreads them over the account's working hours inside the daily quota, pauses and resumes by itself, and reports through `job.*` webhooks. Tell the user the `job_id`.
+- Writes are limited by daily quotas enforced by the server. A refused call returns `daily_quota_reached` with `retry_at`: stop that kind of action on that account for today and say so. Do not retry it.
+- Pass an `idempotency_key` (any UUID) on writes you might have to retry, so a timeout never sends twice.
+- Errors carry `code`, `safe_to_retry`, `retry_at` and `remediation`: act on those fields, not on the wording.
+- Reach MCP is not an official LinkedIn API; automation carries real account risk. Prefer fewer, better-targeted actions.
+
+Docs for agents: https://www.reachmcp.com/llms.txt

@@ -84,3 +84,11 @@ The extension registers the remote server with OAuth; a Reach sign-in page opens
 ## Continue
 
 `continue-block.yaml` is the MCP block for Continue (hub.continue.dev), pointing at the same endpoint.
+
+## Cursor (plugin)
+
+This repository is also a Cursor plugin ([Agent Plugins](https://agent-plugins.org) layout): `.cursor-plugin/plugin.json`, `mcp.json` (the remote server, OAuth on first use) and `rules/reach-mcp.mdc` (usage rules). Install from [cursor.directory](https://cursor.directory), or add the server by hand in Cursor → Settings → MCP:
+
+```json
+{ "mcpServers": { "reach": { "url": "https://app.reachmcp.com/mcp" } } }
+```
