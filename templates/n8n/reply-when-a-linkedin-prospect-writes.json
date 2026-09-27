@@ -1,0 +1,288 @@
+{
+  "name": "Reply when a LinkedIn prospect writes (Reach MCP)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Reply when a LinkedIn prospect writes\n\nReach MCP calls this workflow the moment someone answers on LinkedIn (`message.received`). The workflow verifies the signature, drafts a reply with an LLM and sends it back through Reach, inside the account's daily quotas.\n\n**Setup (5 minutes)**\n1. In Reach (app.reachmcp.com) → **Webhooks** → Add endpoint: paste this workflow's production webhook URL, subscribe to `message.received`. Copy the signing secret (shown once).\n2. Open **Verify signature** and paste the secret in `SECRET`.\n3. In Reach → **API & MCP**, create an API key. Create an n8n *Header Auth* credential: name `X-API-Key`, value the key. Select it in **Send reply with Reach**.\n4. Select your OpenAI credential in **OpenAI Chat Model** (or swap the model node for Anthropic, Gemini…).\n5. Activate the workflow. Test with Reach → Webhooks → **Test** (a `ping` event: it is verified then ignored).\n\nDocs: https://www.reachmcp.com/docs/webhooks.md",
+        "height": 520,
+        "width": 460
+      },
+      "name": "Read me",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Human in the loop?\nInsert a Slack or Gmail **Send and wait for approval** node between **Draft a reply** and **Send reply with Reach** to approve each answer before it goes out. Reach itself never sends without this workflow asking it to.",
+        "height": 180,
+        "width": 360
+      },
+      "name": "Tip",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "reach-linkedin",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Reach webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        0
+      ],
+      "webhookId": "reach-linkedin-message-received"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Paste the endpoint's signing secret from Reach → Webhooks (shown once, rotate if lost).\nconst SECRET = 'whsec_REPLACE_ME';\n\nconst item = $input.first();\nconst headers = item.json.headers || {};\nconst sig = headers['reach-signature'] || '';\nconst parts = Object.fromEntries(sig.split(',').map(p => p.split('=', 2)));\nconst t = parts.t || '';\nconst v1 = parts.v1 || '';\n\n// Raw body as Reach signed it (needs the webhook option \"Raw Body\").\nconst bin = item.binary && item.binary.data;\nconst raw = bin ? Buffer.from(bin.data, 'base64').toString('utf8') : JSON.stringify(item.json.body);\nconst event = JSON.parse(raw);\n\n// Reject replays older than 5 minutes.\nconst fresh = Math.abs(Date.now() / 1000 - Number(t)) < 300;\n\nreturn [{ json: { secret: SECRET, signed: `${t}.${raw}`, v1, fresh, event } }];"
+      },
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -180,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ $json.signed }}",
+        "secret": "={{ $json.secret }}",
+        "dataPropertyName": "hmac"
+      },
+      "name": "HMAC-SHA256",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        40,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "sig",
+              "leftValue": "={{ $json.hmac }}",
+              "rightValue": "={{ $json.v1 }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "fresh",
+              "leftValue": "={{ $json.fresh }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "type",
+              "leftValue": "={{ $json.event.type }}",
+              "rightValue": "message.received",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "group",
+              "leftValue": "={{ $json.event.data.is_groupchat }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notTrue",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Signed, fresh, new 1:1 message?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You reply on LinkedIn on behalf of the account owner. Write the answer only, no subject, no signature, no quotes, 2 to 4 sentences, in the language of the prospect's message, warm and specific, no sales pressure. If the message needs information you do not have, ask one precise question.\n\nProspect: {{ $json.event.data.participant.firstname }} {{ $json.event.data.participant.lastname }} — {{ $json.event.data.participant.headline }}\nTheir last message:\n\"\"\"\n{{ $json.event.data.last_message_text }}\n\"\"\""
+      },
+      "name": "Draft a reply",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        520,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://app.reachmcp.com/api/linkedin/{{ $('Signed, fresh, new 1:1 message?').item.json.event.data.account_id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $('Signed, fresh, new 1:1 message?').item.json.event.id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ conversation_linkedin_id: $('Signed, fresh, new 1:1 message?').item.json.event.data.conversation_id, text: $json.text.trim() }) }}",
+        "options": {}
+      },
+      "name": "Send reply with Reach",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Why the Idempotency-Key\nReach retries a delivery that did not get a 2xx (1 min, 5 min, 30 min, 2 h, 12 h). The event id as `Idempotency-Key` means a retried delivery never sends the reply twice. A refused send returns `429 daily_quota_reached` with `retry_at`: the daily message quota of the account is spent for today.",
+        "height": 200,
+        "width": 360
+      },
+      "name": "Idempotency",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        880,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "Reach webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "HMAC-SHA256",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC-SHA256": {
+      "main": [
+        [
+          {
+            "node": "Signed, fresh, new 1:1 message?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signed, fresh, new 1:1 message?": {
+      "main": [
+        [
+          {
+            "node": "Draft a reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Draft a reply",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft a reply": {
+      "main": [
+        [
+          {
+            "node": "Send reply with Reach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

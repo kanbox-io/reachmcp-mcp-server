@@ -92,3 +92,7 @@ This repository is also a Cursor plugin ([Agent Plugins](https://agent-plugins.o
 ```json
 { "mcpServers": { "reach": { "url": "https://app.reachmcp.com/mcp" } } }
 ```
+
+## n8n
+
+Template **Reply when a LinkedIn prospect writes**: `templates/n8n/reply-when-a-linkedin-prospect-writes.json` — Reach webhook (`message.received`, signature verified) → LLM draft → reply sent through the REST API with an `Idempotency-Key`. Import it from file, follow the sticky note.
