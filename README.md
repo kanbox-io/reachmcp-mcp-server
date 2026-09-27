@@ -17,7 +17,7 @@ Reach MCP lets an AI agent operate a **real LinkedIn account** from Claude, Chat
 2. Add the server to your client. Ask: *"What can you do with my LinkedIn?"* — the `reach_playbooks` tool returns six ready-made workflows.
 3. Run one: *"Find my LinkedIn conversations that went cold and draft a follow-up for each."* Every playbook that writes shows a numbered preview and waits for your go.
 
-## What the agent gets — 52 tools
+## What the agent gets — 58 tools
 
 | Area | Tools |
 |---|---|
@@ -30,6 +30,7 @@ Reach MCP lets an AI agent operate a **real LinkedIn account** from Claude, Chat
 | Publishing | `create_post`, `list_scheduled_posts`, `update_scheduled_post`, `delete_scheduled_post`, `upload_media_from_url`, `create_multi_photo` |
 | Accounts & quotas | `list_accounts`, `get_me`, `get_account_quotas`, `update_account_quotas`, `get_account_request_logs`, `get_account_request_logs_stats`, `delete_account` |
 | Webhooks | `list_webhook_endpoints`, `create_webhook_endpoint`, `update_webhook_endpoint`, `delete_webhook_endpoint`, `test_webhook_endpoint` |
+| Jobs | `create_job`, `get_job`, `list_jobs`, `cancel_job`, `pause_job`, `resume_job` — a batch of messages, invitations, visits or comments Reach runs over working hours, inside the quotas, with `job.*` webhooks |
 
 Every tool carries MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`), a description on every parameter, and an output schema.
 
@@ -47,7 +48,7 @@ Every tool carries MCP annotations (`readOnlyHint`, `destructiveHint`, `idempote
 - **Daily quotas enforced server-side** — invitations, messages, visits, imports, posts, comments, reactions each have a per-account limit checked before every write. Exceed it and the call is refused with `daily_quota_reached` and the reset time. An agent told to "message everyone" cannot.
 - **Errors an agent can act on** — every failure carries a stable `code`, `safe_to_retry`, `retry_at` and a `remediation` sentence; MCP failures are `isError` results, not protocol errors.
 - **Idempotent writes** — pass `idempotency_key` on any write; a retry after a timeout never sends twice.
-- **Signed webhooks** — `message.received`, `connection.new`, `account.status_changed`, `quota.threshold_reached`, `quota.reached`. Stripe-style HMAC signature, retries for 15 hours, replay from the dashboard. Your n8n or Make workflow reacts instead of polling.
+- **Signed webhooks** — `message.received`, `connection.new`, `account.status_changed`, `quota.threshold_reached`, `quota.reached`, `job.started`, `job.progress`, `job.paused`, `job.completed`. Stripe-style HMAC signature, retries for 15 hours, replay from the dashboard. Your n8n or Make workflow reacts instead of polling.
 - **Natural-language Sales Navigator search** — industries resolved against LinkedIn's taxonomy, geographies and companies against live autocomplete, disambiguation when a term is ambiguous.
 - **Residential proxy per account** and human-like pacing.
 

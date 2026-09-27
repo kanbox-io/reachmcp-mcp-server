@@ -1,8 +1,8 @@
 {
   "identifier": "reachmcp",
   "name": "Reach MCP",
-  "version": "1.0.0",
-  "description": "Operate a real LinkedIn account from an AI agent: inbox, invitations, network, Sales Navigator search in plain language, posts and engagement. 52 tools, 6 playbooks served as prompts, daily quotas enforced server-side, structured errors, idempotent writes, signed webhooks. LinkedIn only. OAuth 2.1 or API key; 7-day trial.",
+  "version": "1.1.0",
+  "description": "Operate a real LinkedIn account from an AI agent: inbox, invitations, network, Sales Navigator search in plain language, posts and engagement. 58 tools, 6 playbooks served as prompts, jobs that run a batch over working hours inside the quotas, daily quotas enforced server-side, structured errors, idempotent writes, signed webhooks. LinkedIn only. OAuth 2.1 or API key; 7-day trial.",
   "author": "Kanbox",
   "authorUrl": "https://www.reachmcp.com",
   "homepage": "https://github.com/kanbox-io/reachmcp-mcp-server",
@@ -1697,6 +1697,187 @@
         },
         "required": [
           "endpoint_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_job",
+      "description": "Queue a batch of LinkedIn actions (messages, invitations, profile visits or comments) that Reach executes on its own over the following hours or days: spread across the account's working window (default 09:00-18:00, Monday to Friday, in the account's timezone) with human-like gaps, never beyond the daily quota of the action. Returns immediately with a job_id and the planned schedule; the agent does not have to stay alive. The job pauses by itself when a quota is reached or the account disconnects and resumes when it can; webhooks job.started / job.progress / job.paused / job.completed report what happens. Use it for anything above a handful of actions instead of calling send_message or connect in a loop. Always show the user the items before queuing them.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "send_message",
+              "connect",
+              "visit_profile",
+              "comment_post"
+            ],
+            "description": "What every item does. send_message: text + conversation_linkedin_id (reply) or recipient_linkedin_id (new thread). connect: linkedin_id_or_url + optional message (<200 chars). visit_profile: linkedin_id_or_url. comment_post: post_url_or_urn + text."
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 500,
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": "One object per action, in the order to execute them; fields depend on the action (see action)."
+          },
+          "label": {
+            "type": "string",
+            "description": "Short free text shown in the dashboard and in webhook events, e.g. 'Follow-ups week 40'."
+          },
+          "window_start": {
+            "type": "string",
+            "description": "HH:MM in the job's timezone; default 09:00."
+          },
+          "window_end": {
+            "type": "string",
+            "description": "HH:MM in the job's timezone; default 18:00."
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Weekdays the job may run: mon, tue, wed, thu, fri, sat, sun. Default Monday to Friday."
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA zone such as Europe/Paris. Default: derived from the account's proxy country."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "account_id",
+          "action",
+          "items"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_job",
+      "description": "One job with its status, totals, next execution time and every item (scheduled time, result or error).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "integer",
+            "description": "Job id, as returned by create_job or list_jobs."
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_jobs",
+      "description": "Jobs of this user, newest first, without their items. Filter by account or status (scheduled, running, paused, completed, cancelled).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "description": "Reach id of the LinkedIn account to act on, from list_accounts."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "scheduled",
+              "running",
+              "paused",
+              "completed",
+              "cancelled"
+            ],
+            "description": "Only jobs in this status."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "description": "Maximum number of jobs; default 50."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "cancel_job",
+      "description": "Cancel a job: its pending items will never run. Items already executed are unaffected. Cannot be undone.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "integer",
+            "description": "Job id, as returned by create_job or list_jobs."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "pause_job",
+      "description": "Pause a job: nothing more runs until resume_job is called. Reach also pauses a job by itself when a quota is reached or the account disconnects, and resumes those on its own.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "integer",
+            "description": "Job id, as returned by create_job or list_jobs."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "resume_job",
+      "description": "Resume a paused job. Its pending items are re-planned from now, inside the window and the remaining quota.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "integer",
+            "description": "Job id, as returned by create_job or list_jobs."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional. A key you choose (a UUID is fine) that names this exact call. If you retry with the same key and the same arguments, the first call's result is returned and nothing is done twice on LinkedIn. Reusing a key with different arguments is refused. Keys expire after 24 hours."
+          }
+        },
+        "required": [
+          "job_id"
         ],
         "additionalProperties": false
       }
